@@ -175,32 +175,73 @@ export class Stick {
   }
 
   _face(g, J, tx, ty, px) {
-    const f = this.face, c = this.o.face, hx = tx(J.head[0]), hy = ty(J.head[1]);
+    // expr: smile | grin | happy | smug | tired | yawn | surprised | o | neutral | sip
+    //       angry | pain | scared | worried | shout | cry | frown   (tears: 0..1 adds running tears to any face)
+    const f = this.face, c = this.o.face, ink = this.o.ink, hx = tx(J.head[0]), hy = ty(J.head[1]), E = f.expr;
     const look = f.look ?? 0, ex = hx + look * .22 * px, sep = .29 * px * (1 - .32 * Math.abs(look)), ey = hy - .03 * px;
     const bl = 1 - (f.blink || 0);
-    g.fillStyle = c; g.strokeStyle = c; g.lineCap = 'round';
-    const eye = x => {
-      if (f.expr === 'surprised') {
+    g.fillStyle = c; g.strokeStyle = c; g.lineCap = 'round'; g.lineJoin = 'round';
+    // brows are cut out of the eye with the head's ink: in (inner end down = angry) or up (inner end up = worried / scared)
+    const brow = (x, side, kind) => {
+      g.save(); g.fillStyle = ink; g.translate(x, ey - .1 * px); g.rotate(side * (kind === 'in' ? .5 : -.42));
+      g.fillRect(-.12 * px, -.12 * px, .24 * px, .1 * px); g.restore();
+    };
+    const eye = (x, side) => {
+      if (E === 'surprised') {
         g.beginPath(); g.arc(x, ey, .115 * px, 0, 7); g.fill(); g.fillStyle = '#000'; g.beginPath(); g.arc(x + look * .03 * px, ey, .048 * px, 0, 7); g.fill(); g.fillStyle = c; return;
       }
-      if (f.expr === 'happy' || f.expr === 'yawn' || bl < .15) {        // closed: little arcs
-        const up = f.expr === 'happy';
+      if (E === 'scared') {                                               // round, wide, small pupils, brows up
+        g.beginPath(); g.arc(x, ey, .105 * px, 0, 7); g.fill(); g.fillStyle = '#000'; g.beginPath(); g.arc(x + look * .035 * px, ey + .01 * px, .035 * px, 0, 7); g.fill(); g.fillStyle = c;
+        brow(x, side, 'up'); return;
+      }
+      if (E === 'pain') {                                                 // squeezed shut: > <
+        g.lineWidth = .056 * px; const d = side * .055 * px; g.beginPath();
+        g.moveTo(x - d, ey - .07 * px); g.lineTo(x + d, ey); g.lineTo(x - d, ey + .07 * px); g.stroke(); return;
+      }
+      if (E === 'happy' || E === 'yawn' || E === 'cry' || bl < .15) {    // closed: little arcs
+        const up = E === 'happy' || E === 'cry';
         g.lineWidth = .058 * px; g.beginPath(); g.arc(x, ey + (up ? .045 : -.03) * px, .082 * px, up ? Math.PI * 1.12 : Math.PI * .12, up ? Math.PI * 1.88 : Math.PI * .88); g.stroke(); return;
       }
-      const ry = .1 * px * bl * (f.expr === 'tired' ? .55 : 1);
-      g.beginPath(); g.ellipse(x, ey + (f.expr === 'tired' ? .03 * px : 0), .068 * px, ry, 0, 0, 7); g.fill();
-      if (f.expr === 'smug' || f.expr === 'tired') { g.fillStyle = this.o.ink; g.fillRect(x - .09 * px, ey - .13 * px, .18 * px, .1 * px + (f.expr === 'smug' ? .025 * px : 0)); g.fillStyle = c; }
+      const ry = .1 * px * bl * (E === 'tired' ? .55 : 1);
+      g.beginPath(); g.ellipse(x, ey + (E === 'tired' ? .03 * px : 0), .068 * px, ry, 0, 0, 7); g.fill();
+      if (E === 'smug' || E === 'tired') { g.fillStyle = ink; g.fillRect(x - .09 * px, ey - .13 * px, .18 * px, .1 * px + (E === 'smug' ? .025 * px : 0)); g.fillStyle = c; }
+      if (E === 'angry' || E === 'shout') brow(x, side, 'in');
+      if (E === 'worried' || E === 'frown') brow(x, side, 'up');
     };
-    eye(ex - sep / 2); eye(ex + sep / 2);
+    eye(ex - sep / 2, 1); eye(ex + sep / 2, -1);
     const mx = ex + look * .03 * px, my = hy + .2 * px;
     g.lineWidth = .06 * px;
-    if (f.expr === 'surprised' || f.expr === 'o') { g.lineWidth = .05 * px; g.beginPath(); g.ellipse(mx, my + .02 * px, .065 * px, .085 * px, 0, 0, 7); g.stroke(); }
-    else if (f.expr === 'yawn') { g.beginPath(); g.ellipse(mx, my + .03 * px, .105 * px, .15 * px, 0, 0, 7); g.fill(); g.fillStyle = '#3a1418'; g.beginPath(); g.ellipse(mx, my + .05 * px, .068 * px, .1 * px, 0, 0, 7); g.fill(); }
-    else if (f.expr === 'neutral' || f.expr === 'tired') { g.beginPath(); g.moveTo(mx - .09 * px, my); g.lineTo(mx + .09 * px, my); g.stroke(); }
-    else if (f.expr === 'sip') { g.beginPath(); g.arc(mx, my, .03 * px, 0, 7); g.fill(); }
-    else {                                                              // a smile, lifted on the side the face turns to
-      const w = f.expr === 'grin' ? .21 : .16;
+    if (E === 'surprised' || E === 'o') { g.lineWidth = .05 * px; g.beginPath(); g.ellipse(mx, my + .02 * px, .065 * px, .085 * px, 0, 0, 7); g.stroke(); }
+    else if (E === 'yawn') { g.beginPath(); g.ellipse(mx, my + .03 * px, .105 * px, .15 * px, 0, 0, 7); g.fill(); g.fillStyle = '#3a1418'; g.beginPath(); g.ellipse(mx, my + .05 * px, .068 * px, .1 * px, 0, 0, 7); g.fill(); }
+    else if (E === 'neutral' || E === 'tired') { g.beginPath(); g.moveTo(mx - .09 * px, my); g.lineTo(mx + .09 * px, my); g.stroke(); }
+    else if (E === 'sip') { g.beginPath(); g.arc(mx, my, .03 * px, 0, 7); g.fill(); }
+    else if (E === 'angry' || E === 'frown') {                             // corners down
+      g.save(); g.translate(mx, my + .07 * px); g.rotate(-look * .2); g.beginPath(); g.arc(0, .1 * px, .13 * px, Math.PI * 1.22, Math.PI * 1.78); g.stroke(); g.restore();
+    }
+    else if (E === 'scared' || E === 'worried' || E === 'pain') {          // a wavy line, open a little when in pain
+      g.lineWidth = .045 * px; g.beginPath();
+      for (let i = 0; i <= 12; i++) { const k = i / 12, x = mx + (k - .5) * .26 * px, y = my + .03 * px + Math.sin(k * Math.PI * 3) * .025 * px; i ? g.lineTo(x, y) : g.moveTo(x, y); }
+      g.stroke();
+      if (E === 'pain') { g.beginPath(); g.ellipse(mx, my + .06 * px, .07 * px, .035 * px, 0, 0, 7); g.fill(); }
+    }
+    else if (E === 'shout') {                                              // a big open D
+      g.beginPath(); g.moveTo(mx - .13 * px, my - .02 * px); g.lineTo(mx + .13 * px, my - .02 * px); g.quadraticCurveTo(mx + .12 * px, my + .2 * px, mx, my + .21 * px); g.quadraticCurveTo(mx - .12 * px, my + .2 * px, mx - .13 * px, my - .02 * px); g.fill();
+      g.fillStyle = '#3a1418'; g.beginPath(); g.ellipse(mx, my + .1 * px, .07 * px, .065 * px, 0, 0, 7); g.fill(); g.fillStyle = c;
+    }
+    else if (E === 'cry') {                                                // laughing-crying: open smile
+      g.beginPath(); g.moveTo(mx - .15 * px, my - .03 * px); g.lineTo(mx + .15 * px, my - .03 * px); g.quadraticCurveTo(mx + .12 * px, my + .15 * px, mx, my + .15 * px); g.quadraticCurveTo(mx - .12 * px, my + .15 * px, mx - .15 * px, my - .03 * px); g.fill();
+    }
+    else {                                                                 // a smile, lifted on the side the face turns to
+      const w = E === 'grin' ? .21 : .16;
       g.save(); g.translate(mx, my - .02 * px); g.rotate(-look * .28); g.beginPath(); g.arc(0, -.1 * px, w * px, Math.PI * .2, Math.PI * .8); g.stroke(); g.restore();
+    }
+    const tears = f.tears ?? (E === 'cry' ? 1 : 0);
+    if (tears > 0) {                                                       // two streams of tears, pale blue
+      g.save(); g.globalAlpha = Math.min(1, tears); g.fillStyle = '#bfe3ff'; g.strokeStyle = '#bfe3ff'; g.lineWidth = .045 * px;
+      for (const s of [-1, 1]) { const x0 = ex + s * sep / 2, y0 = ey + .08 * px, L = (.18 + .12 * Math.sin((f.t ?? 0) * 7 + s)) * px * tears;
+        g.beginPath(); g.moveTo(x0, y0); g.quadraticCurveTo(x0 + s * .04 * px, y0 + L * .6, x0 + s * .02 * px, y0 + L); g.stroke();
+        g.beginPath(); g.arc(x0 + s * .02 * px, y0 + L + .03 * px, .035 * px, 0, 7); g.fill(); }
+      g.restore();
     }
   }
   // place the figure: feet at x,y,z, facing the camera; flip = mirror (faces left)

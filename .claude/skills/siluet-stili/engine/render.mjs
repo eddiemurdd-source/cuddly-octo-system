@@ -15,11 +15,13 @@ const story = process.argv[2] || 'uykusuz';
 const SD = path.join(here, '..', 'stories', story), OUT = path.join(SD, 'out'); fs.mkdirSync(OUT, { recursive: true });
 const scale = +(args.scale || 1);
 const CHROME = findChrome();
-const ANGLE = process.platform === 'win32' ? ['--use-angle=d3d11'] : process.platform === 'darwin' ? ['--use-angle=metal'] : [];
+const ANGLE = process.platform === 'win32' ? ['--use-angle=d3d11'] : process.platform === 'darwin' ? ['--use-angle=metal'] : ['--enable-unsafe-swiftshader'];
+// Linux containers (cloud sessions) run as root with no GPU: Chrome needs --no-sandbox there, and WebGL falls back to SwiftShader.
+const ROOT = process.platform === 'linux' && process.getuid?.() === 0 ? ['--no-sandbox'] : [];
 
 const { server, port } = await startServer();
 const browser = await puppeteer.launch({ executablePath: CHROME, headless: 'new', protocolTimeout: 0,
-  args: ['--ignore-gpu-blocklist', ...ANGLE, '--enable-gpu-rasterization', '--hide-scrollbars', '--force-device-scale-factor=1'] });
+  args: ['--ignore-gpu-blocklist', ...ANGLE, ...ROOT, '--enable-gpu-rasterization', '--hide-scrollbars', '--force-device-scale-factor=1'] });
 const page = await browser.newPage();
 page.on('pageerror', e => console.log('PAGEERROR', e.message));
 page.on('console', m => { if (m.type() === 'error' || m.type() === 'warning') console.log('CONSOLE', m.text()); });
