@@ -70,4 +70,6 @@ Ses modeli: `tr_TR-dfki-medium` ([rhasspy/piper-voices](https://huggingface.co/r
 
 Kod MIT lisanslı.
 
+Kullanılan üçüncü taraf parçalar kendi lisanslarıyla gelir: [three.js](https://github.com/mrdoob/three.js) (MIT), Playwright ve Chromium (render için; Apache-2.0 / BSD), ffmpeg (LGPL/GPL), numpy (BSD), Piper (kod MIT), faster-whisper (MIT). `engine/fonts/` içindeki Inter yazı tipi SIL Open Font License 1.1 ile dağıtılır (`engine/fonts/OFL.txt`).
+
 **Seslendirme bu lisansın dışında.** `stories/citlatma/voice/satir/*.wav` ve videodaki anlatım, Piper'ın `tr_TR-dfki-medium` sesiyle üretildi. Bu sesin eğitildiği veri seti ([marytts/dfki-ot-data](https://github.com/marytts/dfki-ot-data/)) **CC BY-NC-SA 4.0** lisanslı: ticari olmayan kullanım, kaynak gösterme ve aynı lisansla paylaşma şartı var. Para kazanılan bir kanalda kullanmadan önce anlatımı kendi sesinizle ya da ticari kullanıma izin veren bir TTS ile değiştirin.
