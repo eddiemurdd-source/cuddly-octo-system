@@ -2,3 +2,4 @@ engine/node_modules/
 stories/*/out/
 stories/test/
 __pycache__/
+stories/*/audio/*.wav
