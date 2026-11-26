@@ -7,3 +7,5 @@ stories/*/audio/*.wav
 stories/*/voice/aistudio/
 *.mp4
 !ornek/*.mp4
+# the TTS voice model, downloaded by voice/make.py
+stories/*/voice/.model/
