@@ -30,16 +30,16 @@
  "L05": {
   "text": "Yağmurda.",
   "take": 0,
-  "asr": "Yağmurda.",
+  "asr": "Yağmur da.",
   "score": 1.0,
   "s": 1.103
  },
  "L06": {
   "text": "Yorgunken.",
   "take": 0,
-  "asr": "Yorgunken.",
+  "asr": "Yorgunken",
   "score": 1.0,
-  "s": 1.057
+  "s": 1.049
  },
  "L07": {
   "text": "Her gün, sadece yüzde bir daha iyi.",
@@ -60,7 +60,7 @@
   "take": 0,
   "asr": "37 kat.",
   "score": 1.0,
-  "s": 1.518
+  "s": 1.52
  },
  "L10": {
   "text": "Motivasyon gelir, gider.",

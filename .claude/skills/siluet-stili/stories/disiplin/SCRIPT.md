@@ -25,7 +25,9 @@ Kurgu referans hook'unun iskeletini izliyor (`analiz/script.md`): güç iş baş
 
 ## Ses
 
-Piper TTS, Türkçe erkek ses `tr_TR-dfki-medium`, tamamen çevrimdışı (`voice/make.py`). Ham ses ortanca 104 Hz; rubberband ile biçimler korunarak ×0,93 kalınlaştırıldı (~96 Hz), alçak raf, varlık bandı, de-esser ve hafif kompresyon. Yankı miks aşamasında.
+Piper TTS, Türkçe erkek ses `tr_TR-dfki-medium`, tamamen çevrimdışı (`voice/make.py`). Ortanca perde 104 Hz. Alçak raf, varlık bandı, de-esser ve hafif kompresyon; ses **kuru**.
+
+İlk sürümde ses rubberband ile ×0,93 kalınlaştırılmış ve mikste 1,3 sn'lik yankı eklenmişti; anlatıcı yankılanıyordu. Bir kelimenin -20 dB'den -45 dB'ye düşme süresi kuru seste ~130 ms, perde kaydırmadan sonra 160 ms, ilk miksde 545 ms ölçüldü. İkisi de kaldırıldı (şimdi ~180 ms, bant filtresi ve kompresyon dahil). Aynı kayıtlar yeniden işlendi (`python make.py --yeniden`), süreler ve senkron değişmedi.
 
 Piper her çalıştırmada gürültüsünü yeniden örnekliyor; aynı kelime bir seferde net, bir seferde bulanık çıkabiliyor ("Disiplin" → "Dissetliğin"). Bu yüzden her satır 5 kez üretilip Whisper (small, Türkçe) ile yazıya döküldü; metne en yakın kayıt seçildi (`voice/secim.json`). 12 satırın 12'si birebir.
 

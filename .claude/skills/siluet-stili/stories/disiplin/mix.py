@@ -17,12 +17,12 @@ cfg = json.load(open(AUD / 'cues.json', encoding='utf-8'))
 DUR = cfg['DUR']; N = int(DUR * SR)
 M = {c['n']: c['t'] for c in cfg['cues'] if c['s'] == 'm'}
 
-# ------------------------------------------------------------------ voice: a little room around the narrator
+# ------------------------------------------------------------------ voice
 voice = np.zeros(N); spans = []
 for lid, t0 in cfg['lines']:
     w = load(HERE / 'voice' / 'satir' / f'{lid}.wav'); w = band(w, 70, 12000); w /= max(1e-6, np.sqrt(np.mean(w ** 2))) / .1
     put(voice, t0, w); spans.append((t0, t0 + len(w) / SR))
-voice = reverb(voice, 1.3, .1)
+# the voice stays dry: a reverb on it (v1: 1.3 s) made the narrator echo
 print('voice lines:', len(spans))
 
 # ------------------------------------------------------------------ score

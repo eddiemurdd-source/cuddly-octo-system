@@ -1,13 +1,15 @@
-# make.py : the male narrator of "Disiplin", made offline with Piper TTS (Turkish voice tr_TR-dfki-medium, a man's voice:
-# median pitch ~104 Hz raw, ~96 Hz after the shift below).
+# make.py : the male narrator of "Disiplin", made offline with Piper TTS (Turkish voice tr_TR-dfki-medium, a man's voice,
+# median pitch ~104 Hz).
 #   pip install piper-tts faster-whisper     ;  python make.py [L03 L11 ...]      (from this folder)
+#   python make.py --yeniden                 re-process the chosen takes (secim.json) with the current FX, no new takes
 # The voice is downloaded once into .model/. Piper samples its noise afresh on every run, so one take of a word can come
 # out blurred ("Disiplin" -> "Dissetliğin") while the next is clean. So every line is made TAKES times and each take is
 # transcribed with Whisper (small, Turkish); the take whose transcript is closest to the text wins (voice/secim.json).
 # Without faster-whisper the first take is kept.
-# Per take: Piper -> 48 kHz -> a little lower and fuller (rubberband pitch x0.93 with the formants kept, low shelf, presence,
-# de-ess, gentle compression) -> silence trimmed to 0.08 s before and 0.25 s after (the skill's convention).
-# The reverb is added in the mix (mix.py), so the tails can ring over the music.
+# Per take: Piper -> 48 kHz -> fuller (low shelf, presence, de-ess, gentle compression) -> silence trimmed to 0.08 s before
+# and 0.25 s after (the skill's convention). The voice stays DRY, here and in the mix: v1 lowered it with rubberband
+# (pitch x0.93) and put a 1.3 s reverb on it in the mix, and it echoed. Measured as the time a word takes to fall from
+# -20 to -45 dB: ~130 ms dry, 160 ms after the pitch shift, 545 ms in the v1 mix.
 import json, pathlib, re, subprocess, sys, urllib.request, wave, difflib
 import numpy as np
 
@@ -19,7 +21,7 @@ TAKES = 5
 LENGTH, NOISE, NOISE_W, PAUSE = 1.12, .5, .55, .32
 # the weighty lines are read slower still: line -> length scale
 PACE = {'L05': 1.2, 'L06': 1.2, 'L09': 1.22, 'L11': 1.18, 'L12': 1.15}
-FX = ('aresample=48000,rubberband=pitch=0.93:formant=preserved:transients=smooth,highpass=f=65,'
+FX = ('aresample=48000,highpass=f=65,'
       'bass=g=3.5:f=130:w=.8,equalizer=f=3000:t=q:w=1.2:g=2.5,equalizer=f=400:t=q:w=1.5:g=-1.5,deesser=i=.35,'
       'acompressor=threshold=-20dB:ratio=3:attack=6:release=90:makeup=2')
 SR = 48000
@@ -52,22 +54,24 @@ def trim(x, pre=.08, post=.25, thr=.012):
     y = x[i0:i1].copy(); f = int(.012 * SR); y[:f] *= np.linspace(0, 1, f); y[-int(.06 * SR):] *= np.linspace(1, 0, int(.06 * SR))
     return y / max(1e-6, np.abs(y).max()) * .89
 
-def take(text, length, path):
-    subprocess.run([sys.executable, '-m', 'piper', '-m', str(MODEL), '-f', str(path), '--length-scale', f'{length:.3f}', '--noise-scale', str(NOISE),
-                    '--noise-w-scale', str(NOISE_W), '--sentence-silence', str(PAUSE)], input=text.encode('utf-8'), check=True, capture_output=True)
+def take(text, length, path, new=True):
+    if new: subprocess.run([sys.executable, '-m', 'piper', '-m', str(MODEL), '-f', str(path), '--length-scale', f'{length:.3f}', '--noise-scale', str(NOISE),
+                            '--noise-w-scale', str(NOISE_W), '--sentence-silence', str(PAUSE)], input=text.encode('utf-8'), check=True, capture_output=True)
     pcm = subprocess.run(['ffmpeg', '-v', 'error', '-i', str(path), '-af', FX, '-ac', '1', '-ar', str(SR), '-f', 'f32le', '-'], capture_output=True, check=True).stdout
     return trim(np.frombuffer(pcm, np.float32))
 
 lines = json.load(open(HERE / 'satirlar.json', encoding='utf-8'))
-only = set(sys.argv[1:])
+again = '--yeniden' in sys.argv
+only = set(a for a in sys.argv[1:] if not a.startswith('--'))
 out = HERE / 'satir'; out.mkdir(exist_ok=True); raw = HERE / '.model' / 'raw'; raw.mkdir(exist_ok=True)
 sel_f = HERE / 'secim.json'; secim = json.load(open(sel_f, encoding='utf-8')) if sel_f.exists() else {}
 for L in lines:
     lid, text = L['id'], L['text']
     if only and lid not in only: continue
     best = None
-    for k in range(TAKES if ASR else 1):
-        y = take(text, PACE.get(lid, LENGTH), raw / f'{lid}_{k}.wav')
+    keep = again and lid in secim and (raw / f"{lid}_{secim[lid]['take']}.wav").exists()
+    for k in [secim[lid]['take']] if keep else range(TAKES if ASR else 1):
+        y = take(text, PACE.get(lid, LENGTH), raw / f'{lid}_{k}.wav', new=not keep)
         hyp = transcribe(y) if ASR else ''; sc = score(text, hyp) if ASR else 1
         if best is None or sc > best[0] + 1e-9: best = (sc, k, hyp, y)
         if sc >= .999: break
