@@ -50,13 +50,13 @@ node render.mjs citlatma --stills=1,9,26,44,52 --scale=0.5
 node render.mjs citlatma --cues
 python audio/mix.py ../stories/citlatma
 
-# 4) tam render (paralel tarayıcılar)
-node render.mjs citlatma --workers=4
+# 4) tam render
+node render.mjs citlatma --r3d=0.75
 ```
 
 Çıktı: `stories/citlatma/out/citlatma.mp4`.
 
-Seçenekler: `--scale=0.5` taslak, `--from=20 --to=30` bir parça, `--workers=N` paralel tarayıcı, `--mute=1` sessiz, `--crf=17` kalite.
+Seçenekler: `--scale=0.5` taslak, `--r3d=0.75` 3D katmanı %75 çözünürlükte çizip büyütür (yazılar yine tam çözünürlükte; GPU olmayan makinede süreyi yarıya indirir), `--from=20 --to=30` bir parça, `--mute=1` sessiz, `--crf=17` kalite, `--workers=N` paralel tarayıcı (GPU varsa işe yarar; SwiftShader zaten tüm çekirdekleri kullanır). `node prof.mjs citlatma 12,44` aşama aşama süre ölçer.
 
 Ses modeli: `tr_TR-dfki-medium` ([rhasspy/piper-voices](https://huggingface.co/rhasspy/piper-voices/tree/main/tr/tr_TR/dfki/medium)). Daha doğal bir ses için satırları başka bir TTS ile ya da kendi sesinizle `voice/satir/L01.wav …` olarak değiştirip 1. adımdaki `words.py` ve `altyazi.py`'yi yeniden çalıştırmanız yeterli.
 

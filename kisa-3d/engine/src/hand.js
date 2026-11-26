@@ -135,25 +135,29 @@ export function skinMaterial(opts = {}) {
       float skinH(vec3 p, out float knuck){
         float h = (vn(p * 9.0) - 0.5) * 0.35 + (vn(p * 26.0) - 0.5) * 0.18;
         knuck = 0.0;
+        float wob = vn(p * 5.0) * 4.0;
         for (int i = 0; i < 15; i++) {
-          vec3 q = p - uJ[i]; float a = dot(q, uJD[i]); vec3 perp = q - uJD[i] * a;
+          vec3 q = p - uJ[i]; float a = dot(q, uJD[i]);
+          if (abs(a) > 1.2) continue;
+          vec3 perp = q - uJD[i] * a; float lp = length(perp);
+          if (lp > 1.6) continue;
           bool thumb = i >= 12; float dors = thumb ? 1.0 : smoothstep(-0.2, 0.5, perp.z);
-          float m = exp(-a * a / (thumb ? 0.25 : 0.12)) * dors * smoothstep(1.6, 0.6, length(perp));
+          float m = exp(-a * a / (thumb ? 0.25 : 0.12)) * dors * smoothstep(1.6, 0.6, lp);
           knuck = max(knuck, m * (i % 3 == 0 ? 0.5 : 1.0));
-          h += m * (sin(a * 48.0 + vn(p * 5.0) * 4.0) * 0.5 + 0.5) * (i % 3 == 0 ? 0.35 : 1.0) * smoothstep(0.0, 0.5, 1.0 - abs(perp.x) / 1.2);
+          h += m * (sin(a * 48.0 + wob) * 0.5 + 0.5) * (i % 3 == 0 ? 0.35 : 1.0) * smoothstep(0.0, 0.5, 1.0 - abs(perp.x) / 1.2);
         }
         return h;
       }
       void main() {`)
       .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
-        float knuck; float hgt = skinH(vObj, knuck) * 0.012 * uBump;
+        float hgt = sHgt * 0.012 * uBump;
         { vec3 vSigmaX = dFdx(-vViewPosition), vSigmaY = dFdy(-vViewPosition), vN = normal;
           vec3 R1 = cross(vSigmaY, vN), R2 = cross(vN, vSigmaX); float fDet = dot(vSigmaX, R1);
           vec3 vGrad = sign(fDet) * (dFdx(hgt) * R1 + dFdy(hgt) * R2);
           normal = normalize(abs(fDet) * vN - vGrad); }`)
       .replace('#include <color_fragment>', `#include <color_fragment>
-        { float k2; skinH(vObj, k2); float tipm = 0.0;
-          diffuseColor.rgb *= mix(vec3(1.0), vec3(1.06, 0.86, 0.84), clamp(k2 * 0.8, 0.0, 1.0));
+        float sKn; float sHgt = skinH(vObj, sKn);
+        { diffuseColor.rgb *= mix(vec3(1.0), vec3(1.06, 0.86, 0.84), clamp(sKn * 0.8, 0.0, 1.0));
           diffuseColor.rgb *= 0.94 + 0.12 * vn(vObj * 2.3); }`)
       .replace('#include <opaque_fragment>', `
         float fres = 1.0 - clamp(dot(normal, normalize(vViewPosition)), 0.0, 1.0);

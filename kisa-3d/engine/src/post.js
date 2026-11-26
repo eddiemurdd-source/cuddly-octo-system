@@ -4,8 +4,9 @@ import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 import { FullScreenQuad } from 'three/addons/postprocessing/Pass.js';
 
 export function makePost(renderer, W, H) {
+  const Q = new URLSearchParams(location.search), SAMPLES = +(Q.get('msaa') ?? 4), NODOF = Q.has('nodof');
   const depthTexture = new THREE.DepthTexture(W, H); depthTexture.type = THREE.UnsignedIntType;
-  const rtScene = new THREE.WebGLRenderTarget(W, H, { type: THREE.HalfFloatType, samples: 4, depthTexture });
+  const rtScene = new THREE.WebGLRenderTarget(W, H, { type: THREE.HalfFloatType, samples: SAMPLES, depthTexture });
   const rtDof = new THREE.WebGLRenderTarget(W, H, { type: THREE.HalfFloatType });
   const bloom = new UnrealBloomPass(new THREE.Vector2(W, H), 0.35, 0.6, 0.82);
 
@@ -75,18 +76,21 @@ export function makePost(renderer, W, H) {
   return {
     rtScene, bloom,
     render(scene, camera, fx = {}) {
-      renderer.setRenderTarget(rtScene); renderer.clear(); renderer.render(scene, camera);
+      const gl = renderer.getContext(), P = window.__gprof, px = new Uint8Array(4), sync = () => { const rt = renderer.getRenderTarget(); if (rt && rt.samples === 0) { gl.readPixels(0, 0, 1, 1, gl.RGBA, rt.texture.type === THREE.HalfFloatType ? gl.FLOAT : gl.UNSIGNED_BYTE, rt.texture.type === THREE.HalfFloatType ? new Float32Array(4) : px); } else gl.finish(); },
+        mark = k => { if (P) { sync(); const n = performance.now(); P[k] = (P[k] || 0) + n - P._t; P._t = n; } };
+      if (P) { sync(); P._t = performance.now(); }
+      renderer.setRenderTarget(rtScene); renderer.clear(); renderer.render(scene, camera); mark('scene');
       const du = dof.material.uniforms;
       du.tCol.value = rtScene.texture; du.uNear.value = camera.near; du.uFar.value = camera.far;
-      du.uFocus.value = fx.focus ?? 10; du.uAperture.value = fx.aperture ?? 0;
-      renderer.setRenderTarget(rtDof); dof.render(renderer);
+      du.uFocus.value = fx.focus ?? 10; du.uAperture.value = NODOF ? 0 : fx.aperture ?? 0;
+      renderer.setRenderTarget(rtDof); dof.render(renderer); mark('dof');
       bloom.strength = fx.bloom ?? 0.35; bloom.radius = fx.bloomRadius ?? 0.6; bloom.threshold = fx.bloomThreshold ?? 0.82;
-      if (bloom.strength > 0) bloom.render(renderer, null, rtDof, 0, false);
+      if (bloom.strength > 0) bloom.render(renderer, null, rtDof, 0, false); mark('bloom');
       const fu = fin.material.uniforms;
       fu.tCol.value = rtDof.texture; fu.uTime.value = fx.time ?? 0; fu.uExpo.value = fx.exposure ?? 1; fu.uVig.value = fx.vignette ?? 0.35;
       fu.uGrain.value = fx.grain ?? 0.03; fu.uCA.value = fx.ca ?? 0.0015; fu.uSat.value = fx.sat ?? 1.05; fu.uFlash.value = fx.flash ?? 0; fu.uFade.value = fx.fade ?? 0; fu.uZoom.value = fx.zoom ?? 0;
       if (fx.lift) fu.uLift.value.set(...fx.lift); if (fx.gain) fu.uGain.value.set(...fx.gain);
-      renderer.setRenderTarget(null); fin.render(renderer);
+      renderer.setRenderTarget(null); fin.render(renderer); mark('final');
     },
   };
 }

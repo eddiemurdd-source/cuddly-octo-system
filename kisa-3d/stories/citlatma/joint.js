@@ -154,7 +154,7 @@ export function makeJoint(renderer) {
     anchors: {
       capsule: () => new THREE.Vector3(-2.05, -0.6, -0.3), fluid: () => new THREE.Vector3(1.55, -1.0, 0.85),
       cart: () => new THREE.Vector3(0.75, -0.25, 1.05), bone: () => new THREE.Vector3(-0.55, -4.5, 0.85),
-      bubble: () => new THREE.Vector3(0, phal.position.y + 0.15, 0.3),
+      bubble: () => bubble.position.clone().add(new THREE.Vector3(-0.35, 0, 0.6)),
       gas: () => new THREE.Vector3(0.85, 0.85, 1.35),
     },
     // s: { capsule, fluid, gas, pull, bubble, dissolve, ring } all 0..1

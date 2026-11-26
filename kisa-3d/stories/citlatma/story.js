@@ -318,7 +318,7 @@ function shotResult(t, ov) {
 // 10 — ending: crack again, the neighbour is not amused
 function shotEnd(t, ov) {
   only(handR, handN); resetHand(handR); resetHand(handN);
-  handR.group.position.set(3.2, -3.5, 6); handR.group.rotation.set(-0.15, 0.55, 0.12);
+  handR.group.position.set(3.6, -1.6, 6); handR.group.rotation.set(-0.15, 0.55, 0.12);
   handR.pose(t < 58.3 ? rollPose(t, 54.15, 0.12, 0.16) : mixP(FIST, { ...FIST, I: [100, 108, 55] }, ss(58.5, 58.85, t)));
   handN.group.position.set(-4.5, 2.5, -16); handN.group.rotation.set(-0.05, -0.45, -0.12);
   const clench = ease.inOut(clamp((t - T.sinir + 0.1) / 0.45));
@@ -327,7 +327,7 @@ function shotEnd(t, ov) {
   handN.pose(mixP(RELAX, { ...FIST, T: [30, 30, 40, -10] }, clench));
   const rack = ss(T.ama - 0.2, T.ama + 0.5, t);
   look([7, 13, 44], [lerp(1.5, -1.5, rack), 6.5, lerp(2, -4, rack)], 35, 0.6, t);
-  const dR = cam.position.distanceTo(new THREE.Vector3(3.2, 4, 6)), dN = cam.position.distanceTo(new THREE.Vector3(-4.5, 9, -16));
+  const dR = cam.position.distanceTo(new THREE.Vector3(3.6, 6, 6)), dN = cam.position.distanceTo(new THREE.Vector3(-4.5, 9, -16));
   const [nx, ny] = O.project(handN.joint('M', 0), cam, W, H);
   ov.push(c => O.label(c, W, H, [nx, ny], [nx + W * 0.06, ny - H * 0.13], 'YANINDAKİ', clamp((t - T.ama) / 0.4) * (1 - ss(58.2, 58.5, t)), '#ffd83a'));
   const [px, py] = O.project(handR.joint('I', 1), cam, W, H);
@@ -344,6 +344,7 @@ export function frame(t) {
   return { scene: r.scene, camera: cam, fx: r.fx, ov };
 }
 export function overlay(ctx, t, f) {
+  if ((f.fx.fade || 0) > 0.5) return;                                     // the closing cut to black takes the text with it
   ctx.save(); ctx.scale(ctx.canvas.width / W, ctx.canvas.height / H);     // overlays are laid out in 1080x1920
   for (const d of f.ov) d(ctx);
   O.drawCaptions(ctx, W, H, chunks, t);

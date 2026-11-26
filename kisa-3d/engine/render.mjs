@@ -22,7 +22,7 @@ async function openPage() {
   const page = await browser.newPage({ viewport: { width: 540, height: 960 } });
   let failed = null; page.on('pageerror', e => { console.log('PAGEERROR', e.message); failed = e; });
   page.on('console', m => { if ((['error', 'warning'].includes(m.type()) || /^hand mesh/.test(m.text())) && !/GPU stall|ReadPixels/.test(m.text())) console.log('CONSOLE', m.text()); });
-  await page.goto(`http://127.0.0.1:${port}/engine/index.html?story=${story}&capture=1&scale=${scale}`, { waitUntil: 'load' });
+  await page.goto(`http://127.0.0.1:${port}/engine/index.html?story=${story}&capture=1&scale=${scale}${args.r3d ? '&r3d=' + args.r3d : ''}`, { waitUntil: 'load' });
   for (let i = 0; !(await page.evaluate(() => !!window.__ready)); i++) { if (failed || i > 600) throw new Error('page did not start: ' + (failed?.message || 'timeout')); await new Promise(r => setTimeout(r, 250)); }
   return { browser, page };
 }
