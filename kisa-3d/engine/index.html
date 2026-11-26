@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>kisa-3d</title>
+<style>
+@font-face { font-family: 'Cap'; src: local('Inter Black'), local('Inter-Black'), url('/engine/fonts/Inter-Black.otf'); font-weight: 900; }
+@font-face { font-family: 'Lab'; src: local('Inter Bold'), local('Inter-Bold'), url('/engine/fonts/Inter-Bold.otf'); font-weight: 700; }
+html,body{margin:0;background:#111;overflow:hidden} #out{display:block;height:100vh;margin:auto} #gl{position:absolute;left:-99999px}
+</style>
+<script type="importmap">
+{ "imports": { "three": "/engine/node_modules/three/build/three.module.js", "three/addons/": "/engine/node_modules/three/examples/jsm/" } }
+</script>
+</head>
+<body>
+<canvas id="gl"></canvas>
+<canvas id="out"></canvas>
+<script type="module" src="/engine/src/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,4 @@
+engine/node_modules/
+stories/*/out/
+stories/test/
+__pycache__/
