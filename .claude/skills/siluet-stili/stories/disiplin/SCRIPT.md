@@ -64,6 +64,8 @@ Toplam 6,45 sn, filmin %21,5'i (referans hook'larında %0–22).
 | Her gün %1 daha iyi → bir yılda ~37,8 kat | 1,01³⁶⁵ = e^(365 · ln 1,01) ≈ 37,78 | Ses "otuz yedi kat", ekranda "37 KAT" ve "1,01³⁶⁵ ≈ 37,8" |
 | Her gün %1 daha kötü → ~0,03 | 0,99³⁶⁵ ≈ 0,0255 | Ekranda "0,99³⁶⁵ ≈ 0,03" |
 
+**Bitmiş video:** [`ornek/disiplin.mp4`](../../ornek/disiplin.mp4) (1920×1080, sesli, 30 sn)
+
 ## Yeniden üretmek
 
 ```bash

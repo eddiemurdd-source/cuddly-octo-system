@@ -458,7 +458,7 @@ export function overlay(g, t, ctx, look) {
     if (z > 0) {
       const sc = 1 + .3 * (1 - z);
       g.save(); g.translate(760, 430); g.scale(sc, sc);
-      g.fillStyle = 'rgba(7,10,24,.62)'; g.beginPath(); g.roundRect(-430, -210, 860, 330, 24); g.fill();
+      g.globalAlpha = z; g.fillStyle = 'rgba(7,10,24,.62)'; g.beginPath(); g.roundRect(-430, -210, 860, 330, 24); g.fill(); g.globalAlpha = 1;
       glowText(g, '37 KAT', 0, 40, 190, '#ffb45a', 50, 900, z);
       g.globalAlpha = z; g.font = `700 40px ${FONT}`; g.textAlign = 'center'; g.fillStyle = '#e9d9b0'; g.fillText('1,01³⁶⁵ ≈ 37,8', 0, 100);
       g.restore();
