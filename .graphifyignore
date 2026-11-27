@@ -1,0 +1,2 @@
+# Vendored graphify source: keep it out of this project's own knowledge graph
+tools/graphify/
